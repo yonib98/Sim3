@@ -5,6 +5,7 @@
  localparam
     LW      = 10'b0000011_010,
     SW      = 10'b0100011_010,
+    SW2     = 10'b0100011_011,
     ALU     = 10'b0110011_xxx,
     BEQ     = 10'b1100011_000,
     JAL     = 10'b1101111_xxx;
@@ -23,14 +24,20 @@
 
  // ALU_A
  localparam
-    ALUA_PCC = 1'b0,
-    ALUA_REG = 1'b1;
+    ALUA_PCC = 2'b0,
+    ALUA_REG = 2'b1,
+    ALUA_0   = 2'b2;
 
  // ALU_B
  localparam
     ALUB_IMM = 1'b0,
     ALUB_REG = 1'b1;
 
+//ADDR_A
+ localparam
+    ALU_OUT=1'b0,
+    B=1'b1;
+    
  // ALU operations
  localparam
     ALU_ADD = 4'b000_0,

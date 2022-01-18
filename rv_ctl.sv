@@ -17,12 +17,14 @@
      output logic pcwrite,
      output logic pccen,
      output logic irwrite,
+     output logic addrwrite,
      output logic [1:0] wbsel,
      output logic regwen,
      output logic [1:0] immsel,
      output logic asel,
      output logic bsel,
      output logic [3:0] alusel,
+     output logic sw_sel,
      output logic mdrwrite,
      
      // Clock and reset
@@ -48,7 +50,10 @@
     RTYPE_ALU   = 6,
     RTYPE_WB    = 7,
     BEQ_EXEC    = 8,
-    JAL_EXEC    = 9
+    JAL_EXEC    = 9,
+    LW_HOLD     = 10,
+    SW2_SUB     = 11,
+    SW_CONT     = 12
 	} sm_type;
 
 sm_type current,next;
@@ -83,17 +88,29 @@ sm_type current,next;
         end
         LSW_ADDR: begin
             casex (opcode_funct3)
-                LW:     next = LW_MEM;
+                LW:     next = LW_HOLD;
                 SW:     next = SW_MEM;
                 // This is never reached
                 default:next = SW_MEM;
             endcase
         end
+        SW_MEM: begin
+            casex (opcode_funct3)
+                SW2: next=SW2_SUB;
+                SW: next=SW_CONT;
+                default:next = SW_CONT;
+            endcase
+        end
+
+        SW2_SUB: 
+            next = FETCH;
+        SW_CONT:
+            next = FETCH; 
+        LW_HOLD:
+            next = LW_MEM;
         LW_MEM:
             next = LW_WB;
         LW_WB:
-            next = FETCH;
-        SW_MEM:
             next = FETCH;
         RTYPE_ALU:
             next = RTYPE_WB;
@@ -118,6 +135,7 @@ sm_type current,next;
     pcwrite = 1'b0;
     pccen = 1'b0;
     irwrite = 1'b0;
+    addrwrite=1'b0;
     wbsel = WB_PC;
     regwen = 1'b0;
     immsel = IMM_B;
@@ -126,6 +144,7 @@ sm_type current,next;
     alusel = ALU_ADD;
     mdrwrite = 1'b0;
     memrw = 1'b0;
+    sw_sel=B;
     case (current)
         FETCH:
         begin
@@ -146,13 +165,29 @@ sm_type current,next;
             bsel        = ALUB_IMM;
             alusel      = ALU_ADD;
         end
+        LW_HOLD: begin
+            immsel      = (opcode_funct3 == LW) ? IMM_L : IMM_S;
+            asel        = ALUA_REG;
+            bsel        = ALUB_IMM;
+            alusel      = ALU_ADD;
+            addrwrite   = 1'b1;
+        end
         LW_MEM:
             mdrwrite    = 1'b1;
         LW_WB: begin
             wbsel       = WB_MDR;
             regwen      = 1'b1;
         end
-        SW_MEM:
+        SW_MEM: begin
+            addrwrite   = 1'b1;
+            alusel      = (opcode_funct3==SW2) ? ALU_SUB : ALU_ADD;
+            asel        = (opcode_funct3==SW2) ? ALUA_0  : ALUA_REG;
+        end
+        SW_CONT: begin
+            memrw       = 1'b1;
+        end
+        SW2_SUB: begin
+            SW_SEL      = ALU_OUT;
             memrw       = 1'b1;
         RTYPE_ALU: begin
             asel        = ALUA_REG;

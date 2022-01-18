@@ -25,12 +25,14 @@
      input logic pcwrite,
      input logic pccen,
      input logic irwrite,
+     input logic addrwrite,
      input logic [1:0] wbsel,
      input logic regwen,
      input logic [1:0] immsel,
-     input logic asel,
+     input logic [1:0] asel,
      input logic bsel,
      input logic [3:0] alusel,
+     input logic sw_sel,
      input logic mdrwrite,
      
      // Clock and reset
@@ -42,7 +44,7 @@
  `include "params.inc"
 
  // Stage registers
- logic [DPWIDTH-1:0] pc, pcc, ir, a, b, aluout, mdr;
+ logic [DPWIDTH-1:0] pc, pcc, ir, a, b, aluout, mdr,addr;
 
  // Fetch
  assign imem_addr = pc;
@@ -71,6 +73,14 @@
      else if (irwrite)
          ir     <= imem_datain;
  assign instr = ir;
+
+  // ADDR
+  // ==
+ always_ff @(posedge clk or posedge rst)
+     if (rst)
+         addr     <= 0;
+     else if (addrwrite)
+         addr    <= aluout;
  
  // Register file inputs
  // ====================
@@ -125,7 +135,7 @@
 
  // ALU input A
  logic [DPWIDTH-1:0] alu_a;
- assign alu_a = (asel == ALUA_REG) ? a : pcc;
+ assign alu_a = (asel == ALUA_REG) ? a : (asel == ALUA_0) ? 32'b0 : pcc;
 
  // ALU input A
  logic [DPWIDTH-1:0] alu_b;
@@ -165,8 +175,8 @@
 
  // Memory
  // ======
- assign dmem_addr = aluout;
- assign dmem_dataout = b;
+ assign dmem_addr = addr;
+ assign dmem_dataout = (sw_sel==B) ? b:aluout;
 
  always_ff @(posedge clk or posedge rst)
      if (rst)
