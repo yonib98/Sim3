@@ -1,11 +1,10 @@
 .text
 main:   # Start of your code
-        addi t1, x0,8
-        lw t2, 0(t1)
-        lw t3, 4(t1)
-        add t1, t1, t1
-        sw2 t2, 0(t1)
-        sw2 t3, 4(t1)
+        add t1, x0,x0
+        lw t2, 8(t1)
+        lw t3, 12(t1)
+        sw2 t2, 16(t1)
+        sw2 t3, 20(t1)
         
         # End of your code
         add		t6, x0, x0

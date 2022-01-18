@@ -21,7 +21,7 @@
      output logic [1:0] wbsel,
      output logic regwen,
      output logic [1:0] immsel,
-     output logic asel,
+     output logic [1:0] asel,
      output logic bsel,
      output logic [3:0] alusel,
      output logic sw_sel,
@@ -33,7 +33,7 @@
  );
  
  // Design parameters
- `include "params.inc"
+  `include "params.inc"
 
  // =========================================================
  // The state machine
@@ -79,6 +79,7 @@ sm_type current,next;
             casex (opcode_funct3)
                 LW:     next = LSW_ADDR;
                 SW:     next = LSW_ADDR;
+				SW2:    next = LSW_ADDR;
                 ALU:    next = RTYPE_ALU;
                 BEQ:    next = BEQ_EXEC;
                 JAL:    next = JAL_EXEC;
@@ -90,6 +91,7 @@ sm_type current,next;
             casex (opcode_funct3)
                 LW:     next = LW_HOLD;
                 SW:     next = SW_MEM;
+				SW2:    next = SW_MEM;
                 // This is never reached
                 default:next = SW_MEM;
             endcase
@@ -187,8 +189,9 @@ sm_type current,next;
             memrw       = 1'b1;
         end
         SW2_SUB: begin
-            SW_SEL      = ALU_OUT;
+            sw_sel      = ALU_OUT;
             memrw       = 1'b1;
+		end
         RTYPE_ALU: begin
             asel        = ALUA_REG;
             bsel        = ALUB_REG;

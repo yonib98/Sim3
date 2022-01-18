@@ -24,9 +24,9 @@
 
  // ALU_A
  localparam
-    ALUA_PCC = 2'b0,
-    ALUA_REG = 2'b1,
-    ALUA_0   = 2'b2;
+    ALUA_PCC = 2'b00,
+    ALUA_REG = 2'b01,
+    ALUA_0   = 2'b10;
 
  // ALU_B
  localparam
